@@ -10,7 +10,9 @@ const server = http.createServer((req, res) => {
   }
 });
 
-const PORT = 8080;
+// ✅ Use 8090 instead of 8080 to avoid conflict with NGINX
+const PORT = 8090;
+
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
