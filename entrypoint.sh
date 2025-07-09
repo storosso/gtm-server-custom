@@ -1,8 +1,10 @@
-
 #!/bin/bash
 
-# Start NGINX in the background
+# Start NGINX in background
 nginx
 
-# Forward requests to Google Tag Manager server container
-exec node server.js "$CONTAINER_CONFIG"
+# Start GTM server (this must be node-compatible)
+node server.js "$CONTAINER_CONFIG" &
+
+# Wait for both to finish (keep container alive)
+wait -n
