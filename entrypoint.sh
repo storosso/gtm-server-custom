@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# Start NGINX in background
+# Start NGINX
 nginx
 
-# Start GTM server (this must be node-compatible)
-node server.js "$CONTAINER_CONFIG" &
-
-# Wait for both to finish (keep container alive)
-wait -n
+# Start GTM server and replace the shell so container stays alive
+exec node server.js "$CONTAINER_CONFIG"
