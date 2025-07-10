@@ -1,74 +1,62 @@
-console.log('🎯 RAW ENV:', process.env);
+// server.js
 const http = require('http');
-const url = require('url');
-const https = require('https');
+const url  = require('url');
 
 const PORT = Number(process.env.PORT) || 8080;
-const FB_PIXEL_ID = process.env.FB_PIXEL_ID;
-const FB_ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN;
-
-console.log('FB_PIXEL_ID:', FB_PIXEL_ID);
-console.log('FB_ACCESS_TOKEN:', FB_ACCESS_TOKEN?.substring(0, 6), '...');
-
-if (!FB_PIXEL_ID || !FB_ACCESS_TOKEN) {
-  console.error('❌ Missing FB_PIXEL_ID or FB_ACCESS_TOKEN in environment variables.');
-  process.exit(1);
-}
 
 const server = http.createServer((req, res) => {
   const { pathname } = url.parse(req.url, true);
 
   // — CORS —
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin',  '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
+  // preflight
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     return res.end();
   }
 
+  // — health check —
   if (pathname === '/healthz') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     return res.end('OK');
   }
 
+  // — GTM collects — support both endpoints
+  // GTM client may POST to /g/collect OR /collect
   if (pathname === '/g/collect' || pathname === '/collect') {
-    const params = new URL(req.url, `http://_`).searchParams;
+    // extract GTM payload from querystring
+    const params    = new URL(req.url, `http://_`).searchParams;
     const eventName = params.get('en') || 'page_view';
-    const currency = params.get('cu') || 'EUR';
-    const value = parseFloat(params.get('ev')) || undefined;
-    const sourceUrl = params.get('dl') || params.get('dp') || 'https://storosso.com';
 
+    // build Facebook CAPI payload
     const fbPayload = {
       data: [{
-        event_name: eventName,
-        event_time: Math.floor(Date.now() / 1000),
-        event_source_url: sourceUrl,
-        action_source: 'website',
-        event_id: params.get('gtm.eventId') || undefined,
+        event_name:       eventName,
+        event_time:       Math.floor(Date.now() / 1000),
+        event_source_url: params.get('dl') || params.get('dp'),
+        action_source:    'website',
         user_data: {
           client_ip_address: req.socket.remoteAddress,
           client_user_agent: req.headers['user-agent']
         },
         custom_data: {
-          currency: currency,
-          value: value,
-          content_type: 'product',
-          content_ids: ['bordopalla_001']
-        }
+          currency: params.get('cu'),
+          value:    parseFloat(params.get('ev')) || undefined
+        },
+        event_id: params.get('gtm.eventId') || undefined
       }]
     };
 
+    // send to FB Conversion API
     const postData = JSON.stringify(fbPayload);
-    const fbPath = `/v17.0/${FB_PIXEL_ID}/events?access_token=${FB_ACCESS_TOKEN}`;
+    const fbHost   = 'graph.facebook.com';
+    const fbPath   = `/v17.0/${process.env.FB_PIXEL_ID}/events?access_token=${process.env.FB_ACCESS_TOKEN}`;
 
-    const fbReq = https.request(
-      {
-        hostname: 'graph.facebook.com',
-        path: fbPath,
-        method: 'POST',
-        headers: {
+    const fbReq = require('https').request(
+      { hostname: fbHost, path: fbPath, method: 'POST', headers: {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(postData)
         }
@@ -77,23 +65,25 @@ const server = http.createServer((req, res) => {
         let body = '';
         fbRes.on('data', chunk => body += chunk);
         fbRes.on('end', () => {
-          console.log(`✅ FB CAPI [${eventName}] → ${fbRes.statusCode}:`, body);
+          console.log('FB CAPI response:', fbRes.statusCode, body);
         });
       }
     );
 
-    fbReq.on('error', err => console.error('❌ FB CAPI error:', err));
+    fbReq.on('error', err => console.error('FB CAPI error:', err));
     fbReq.write(postData);
     fbReq.end();
 
+    // immediately acknowledge GTM
     res.writeHead(204);
     return res.end();
   }
 
+  // — everything else —
   res.writeHead(404, { 'Content-Type': 'text/plain' });
   res.end('Not Found');
 });
 
 server.listen(PORT, () => {
-  console.log(`🚀 Server listening on port ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });
