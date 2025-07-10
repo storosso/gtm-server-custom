@@ -1,4 +1,3 @@
-// server.js
 const http = require('http');
 const url = require('url');
 
@@ -52,7 +51,6 @@ const server = http.createServer((req, res) => {
           action_source: 'website',
           user_data: {
             client_ip_address: req.socket.remoteAddress,
-            client_user_agent: req.headers['user-agent'],
             client_user_agent: req.headers['user-agent']
           },
           custom_data: {
@@ -102,7 +100,6 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
-// server.js
 const http = require('http');
 const url = require('url');
 
@@ -156,7 +153,6 @@ const server = http.createServer((req, res) => {
           action_source: 'website',
           user_data: {
             client_ip_address: req.socket.remoteAddress,
-            client_user_agent: req.headers['user-agent'],
             client_user_agent: req.headers['user-agent']
           },
           custom_data: {
