@@ -23,18 +23,13 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     return res.end('OK');
   }
-  // …inside your createServer callback…
 
--  // GTM collects — 
--  // GTM client will POST to /g/collect?v=…&tid=…&gtm=…
--  if (pathname === '/g/collect') {
-+  // GTM collects — support both endpoints
-+  // GTM client may POST to /g/collect OR /collect
-+  if (pathname === '/g/collect' || pathname === '/collect') {
-     res.writeHead(204); // no content
-     return res.end();
+  // — GTM collects — support both endpoints
+  // GTM client may POST to /g/collect OR /collect
+  if (pathname === '/g/collect' || pathname === '/collect') {
+    res.writeHead(204); // no content
+    return res.end();
   }
-
 
   // — everything else —
   res.writeHead(404, { 'Content-Type': 'text/plain' });
