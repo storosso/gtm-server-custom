@@ -1,16 +1,9 @@
-FROM node:18-slim
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY . .
-
-RUN apt-get update && apt-get install -y nginx curl && apt-get clean
-
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY entrypoint.sh /entrypoint.sh
-
-RUN chmod +x /entrypoint.sh
+COPY server.js .
 
 EXPOSE 8080
 
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["node", "server.js"]
