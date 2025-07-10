@@ -1,33 +1,41 @@
+// server.js
 const http = require('http');
-const url = require('url');
+const url  = require('url');
+
+const PORT = Number(process.env.PORT) || 8080;
 
 const server = http.createServer((req, res) => {
-  const parsedUrl = url.parse(req.url, true);
+  const { pathname } = url.parse(req.url, true);
 
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // — CORS —
+  res.setHeader('Access-Control-Allow-Origin',  '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight requests
+  // preflight
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     return res.end();
   }
 
-  if (parsedUrl.pathname === '/healthz') {
+  // — health check —
+  if (pathname === '/healthz') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('OK');
-  } else if (parsedUrl.pathname === '/collect') {
-    res.writeHead(204);
-    res.end();
-  } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not Found');
+    return res.end('OK');
   }
+
+  // — GTM collects — 
+  // GTM client will POST to /g/collect?v=…&tid=…&gtm=…
+  if (pathname === '/g/collect') {
+    res.writeHead(204); // no content
+    return res.end();
+  }
+
+  // — everything else —
+  res.writeHead(404, { 'Content-Type': 'text/plain' });
+  res.end('Not Found');
 });
 
-const PORT = 8080;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });
