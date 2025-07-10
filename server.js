@@ -6,9 +6,14 @@ const PORT = Number(process.env.PORT) || 8080;
 const FB_PIXEL_ID = process.env.FB_PIXEL_ID;
 const FB_ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN;
 
+console.log('FB_PIXEL_ID:', FB_PIXEL_ID);
+console.log('FB_ACCESS_TOKEN:', FB_ACCESS_TOKEN?.substring(0, 6), '...');
+
 if (!FB_PIXEL_ID || !FB_ACCESS_TOKEN) {
   console.error('❌ Missing FB_PIXEL_ID or FB_ACCESS_TOKEN in environment variables.');
   process.exit(1);
+}
+
 }
 
 const server = http.createServer((req, res) => {
