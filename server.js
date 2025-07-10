@@ -1,3 +1,4 @@
+console.log('🎯 RAW ENV:', process.env);
 const http = require('http');
 const url = require('url');
 const https = require('https');
