@@ -14,8 +14,6 @@ if (!FB_PIXEL_ID || !FB_ACCESS_TOKEN) {
   process.exit(1);
 }
 
-}
-
 const server = http.createServer((req, res) => {
   const { pathname } = url.parse(req.url, true);
 
@@ -59,7 +57,7 @@ const server = http.createServer((req, res) => {
           currency: currency,
           value: value,
           content_type: 'product',
-          content_ids: ['bordopalla_001'] // Optional: update dynamically if needed
+          content_ids: ['bordopalla_001']
         }
       }]
     };
@@ -90,7 +88,6 @@ const server = http.createServer((req, res) => {
     fbReq.write(postData);
     fbReq.end();
 
-    // Return immediately to GTM
     res.writeHead(204);
     return res.end();
   }
